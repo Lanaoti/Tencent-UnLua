@@ -28,6 +28,7 @@ FUnLuaEditorToolbar::FUnLuaEditorToolbar()
     : CommandList(new FUICommandList),
       ContextObject(nullptr)
 {
+    
 }
 
 void FUnLuaEditorToolbar::Initialize()
@@ -38,8 +39,8 @@ void FUnLuaEditorToolbar::Initialize()
 void FUnLuaEditorToolbar::BindCommands()
 {
     const auto& Commands = FUnLuaEditorCommands::Get();
-	CommandList->MapAction(Commands.CreateLuaTemplate, FExecuteAction::CreateRaw(this, &FUnLuaEditorToolbar::CreateLuaTemplate_Executed));
-	CommandList->MapAction(Commands.CopyAsRelativePath, FExecuteAction::CreateRaw(this, &FUnLuaEditorToolbar::CopyAsRelativePath_Executed));
+    CommandList->MapAction(Commands.CreateLuaTemplate, FExecuteAction::CreateRaw(this, &FUnLuaEditorToolbar::CreateLuaTemplate_Executed));
+    CommandList->MapAction(Commands.CopyAsRelativePath, FExecuteAction::CreateRaw(this, &FUnLuaEditorToolbar::CopyAsRelativePath_Executed));
     CommandList->MapAction(Commands.CreateDefaultLuaTemplate, FExecuteAction::CreateRaw(this, &FUnLuaEditorToolbar::CreateLuaDefualtTemplate_Executed));
     CommandList->MapAction(Commands.CopyAsDefaultModuleName, FExecuteAction::CreateRaw(this, &FUnLuaEditorToolbar::CopyAsDefualtModuleName_Executed));
     CommandList->MapAction(Commands.BindToLua, FExecuteAction::CreateRaw(this, &FUnLuaEditorToolbar::BindToLua_Executed));
@@ -446,17 +447,17 @@ void FUnLuaEditorToolbar::CreateLuaDefualtTemplate_Executed()
         }
     }
 
-	static FString UnLuaBaseDir = IPluginManager::Get().FindPlugin(TEXT("UnLua"))->GetBaseDir();
-	for (auto TemplateClass = Class; TemplateClass; TemplateClass = TemplateClass->GetSuperClass())
-	{
-		auto TemplateClassName = TemplateClass->GetName().EndsWith("_C") ? TemplateClass->GetName().LeftChop(2) : TemplateClass->GetName();
-		auto RelativeFilePath = "Config/LuaTemplates" / TemplateClassName + ".lua";
-		auto FullFilePath = FPaths::ProjectDir() / RelativeFilePath;
-		if (!FPaths::FileExists(FullFilePath))
-			FullFilePath = UnLuaBaseDir / RelativeFilePath;
+    static FString UnLuaBaseDir = IPluginManager::Get().FindPlugin(TEXT("UnLua"))->GetBaseDir();
+    for (auto TemplateClass = Class; TemplateClass; TemplateClass = TemplateClass->GetSuperClass())
+    {
+        auto TemplateClassName = TemplateClass->GetName().EndsWith("_C") ? TemplateClass->GetName().LeftChop(2) : TemplateClass->GetName();
+        auto RelativeFilePath = "Config/LuaTemplates" / TemplateClassName + ".lua";
+        auto FullFilePath = FPaths::ProjectDir() / RelativeFilePath;
+        if (!FPaths::FileExists(FullFilePath))
+            FullFilePath = UnLuaBaseDir / RelativeFilePath;
 
-		if (!FPaths::FileExists(FullFilePath))
-			continue;
+        if (!FPaths::FileExists(FullFilePath))
+            continue;
 
         FString CompanyName = "";
         FString AuthorName = "";
@@ -481,10 +482,10 @@ void FUnLuaEditorToolbar::CreateLuaDefualtTemplate_Executed()
             }
         }
 
-		FString Content;
-		FFileHelper::LoadFileToString(Content, *FullFilePath);
-		Content = Content.Replace(TEXT("TemplateName"), *ClassName)
-						 .Replace(TEXT("ClassName"), *UnLua::IntelliSense::GetTypeName(Class))
+        FString Content;
+        FFileHelper::LoadFileToString(Content, *FullFilePath);
+        Content = Content.Replace(TEXT("TemplateName"), *ClassName)
+                        .Replace(TEXT("ClassName"), *UnLua::IntelliSense::GetTypeName(Class))
                          .Replace(TEXT("@COMPANY **"), *FString::Printf(TEXT("@COMPANY %s"), *CompanyName))
                          .Replace(TEXT("@AUTHOR **"), *FString::Printf(TEXT("@AUTHOR %s"), *AuthorName))
                          .Replace(TEXT("${date}"), *FDateTime::Now().ToString(TEXT("%Y/%m/%d")))
@@ -499,16 +500,23 @@ void FUnLuaEditorToolbar::CreateLuaDefualtTemplate_Executed()
             {
                 SuperPath = SuperPath.Left(SuperLastIndex + 1);
             }
-            SuperPath = SuperPath.RightChop(6); // ignore "/Game/"
+
+            SuperPath = SuperPath.RightChop(1); // ignore first "/"
+            int32 SuperFirstIndex;
+            if (SuperPath.FindChar('/', SuperFirstIndex))
+            {
+                SuperPath = SuperPath.RightChop(SuperFirstIndex + 1);
+            }
+            
             const FString SuperFileName = FString::Printf(TEXT("%s%s"), *SuperPath, *SuperClassName).Replace(TEXT("/"), TEXT("."));
 
             Content = Content.Replace(TEXT(" = UnLua.Class()"), *FString::Printf(TEXT(", Super = UnLua.Class(\"%s\")"), *SuperFileName))
                              .Replace(TEXT("self.Overridden"), TEXT("Super"));
         }
 
-		FFileHelper::SaveStringToFile(Content, *FileName, FFileHelper::EEncodingOptions::ForceUTF8WithoutBOM);
-		break;
-	}
+        FFileHelper::SaveStringToFile(Content, *FileName, FFileHelper::EEncodingOptions::ForceUTF8WithoutBOM);
+        break;
+    }
 }
 
 void FUnLuaEditorToolbar::CopyAsDefualtModuleName_Executed() const
