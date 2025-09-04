@@ -25,6 +25,8 @@ public class UnLuaEditor : ModuleRules
         bEnforceIWYU = false;
 #endif
 
+        OptimizeCode = CodeOptimization.InShippingBuildsOnly;
+
         PCHUsage = PCHUsageMode.UseExplicitOrSharedPCHs;
 
         PublicIncludePaths.AddRange(
@@ -94,7 +96,6 @@ public class UnLuaEditor : ModuleRules
             }
         );
 
-        if (Target.bGenerateProjectFiles)
         {
 #if UE_5_5_OR_LATER
             string TargetFramework = "net8.0";
@@ -112,6 +113,5 @@ public class UnLuaEditor : ModuleRules
             
             File.WriteAllText(PropsPath, PropsContent);
         }
-
     }
 }
