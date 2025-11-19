@@ -72,25 +72,28 @@ void ULuaOverridesClass::AddToOwner()
     if (!Class)
         return;
 
-#if UE_VERSION_NEWER_THAN(5, 2, 1)
-    auto ChildrenPtr = Class->Children.Get();
-
-    auto Field = &ChildrenPtr;
-#else
-    auto Field = &(Class->Children);
-#endif
-    while (*Field)
-    {
-        if (*Field == this)
-        {
-            Field = nullptr;
-            break;
-        }
-        Field = &(*Field)->Next;
-    }
+    UField* Field = Class->Children;
 
     if (Field)
-        *Field = this;
+    {
+        if (Field != this)
+        {
+            while (Field)
+            {
+                if (Field->Next == nullptr)
+                {
+                    Field->Next = this;
+                    break;
+                }
+
+                Field = Field->Next;
+            }
+        }
+    }
+    else
+    {
+        Class->Children = this;
+    }
 
     if (Class->IsRooted() || GUObjectArray.IsDisregardForGC(Class))
         AddToRoot();
@@ -102,21 +105,27 @@ void ULuaOverridesClass::RemoveFromOwner()
     if (!Class)
         return;
 
-#if UE_VERSION_NEWER_THAN(5, 2, 1)
-    auto ChildrenPtr = Class->Children.Get();
+    UField* Field = Class->Children;
 
-    auto Field = &ChildrenPtr;
-#else
-    auto Field = &Class->Children;
-#endif
-    while (*Field)
+    if (Field)
     {
-        if (*Field == this)
+        if (Field != this)
         {
-            *Field = nullptr;
-            break;
+            while (Field)
+            {
+                if (Field->Next == this)
+                {
+                    Field->Next = nullptr;
+                    break;
+                }
+
+                Field = Field->Next;
+            }
         }
-        Field = &(*Field)->Next;
+        else
+        {
+            Class->Children = nullptr;
+        }
     }
 
     if (!Class->IsRooted() && !GUObjectArray.IsDisregardForGC(Class))

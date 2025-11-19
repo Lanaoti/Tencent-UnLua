@@ -16,6 +16,7 @@
 #include "LuaCore.h"
 #include "LuaDynamicBinding.h"
 #include "Engine/World.h"
+#include "Engine/Level.h"
 
 /**
  * Spawn an actor.
