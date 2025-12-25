@@ -59,6 +59,27 @@ namespace UnLua
             return 0;
         }
 
+        static int GetModuleFilePath(lua_State* L)
+        {
+            int32 NumParams = lua_gettop(L);
+            if (NumParams != 1)
+                return luaL_error(L, "invalid parameters");
+
+            FString ModuleName = UTF8_TO_TCHAR(luaL_tolstring(L, 1, nullptr));
+            FString FilePath;
+            for (TPair<lua_State*, FLuaEnv*>& Pair : FLuaEnv::GetAll())
+            {
+                if (Pair.Key == L)
+                {
+                    Pair.Value->GetModuleFilePath(ModuleName, FilePath);
+                    break;
+                }
+            }
+
+            lua_pushstring(L, TCHAR_TO_UTF8(*FilePath));
+            return 1;
+        }
+
         static int Ref(lua_State* L)
         {
             const auto Object = GetUObject(L, -1);
@@ -86,6 +107,7 @@ namespace UnLua
             {"LogWarn", LogWarn},
             {"LogError", LogError},
             {"HotReload", HotReload},
+            {"GetModuleFilePath", GetModuleFilePath},
             {"Ref", Ref},
             {"Unref", Unref},
             {"FTextEnabled", nullptr},

@@ -14,7 +14,6 @@ local loaded_modules = setmetatable({}, { __mode = "v" })
 local ignore_modules = {}
 local config = {
     debug = false,
-    script_root_path = UE.UUnLuaFunctionLibrary.GetScriptRootPath(),
     ignore_modules = ignore_modules
 }
 local hook = {
@@ -114,7 +113,7 @@ end
 local loaded_module_times = {}
 
 local function get_last_modified_time(module_name)
-    local filename = config.script_root_path .. module_name:gsub("%.", "/") .. ".lua"
+    local filename = UnLua.GetModuleFilePath(module_name)
     return UE.UUnLuaFunctionLibrary.GetFileLastModifiedTimestamp(filename)
 end
 
@@ -602,6 +601,8 @@ local function reload_modules(module_names)
 end
 
 function M.reload(module_names)
+	UnLua.Log(string.format("reload module_names: %d", module_names and #module_names or 0))
+
     if module_names then
         reload_modules(module_names)
         return
@@ -618,7 +619,9 @@ function M.reload(module_names)
             end
         end
     end
-    print("modified modules:", dump(modified_modules))
+	
+	UnLua.Log(string.format("modified modules: %s", dump(modified_modules)))
+	
     if #modified_modules > 0 then
         reload_modules(modified_modules)
     end

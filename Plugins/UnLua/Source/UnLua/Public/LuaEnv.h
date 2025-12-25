@@ -120,6 +120,10 @@ namespace UnLua
 
         void RemoveManualObjectReference(UObject* Object);
 
+        void AddModuleFilePath(const FString& InModuleName, const FString& InFilePath);
+
+        bool GetModuleFilePath(const FString& InModuleName, FString& FilePath);
+
     protected:
         lua_State* L;
 
@@ -159,6 +163,7 @@ namespace UnLua
         void UnRegisterDelegates();
 
         static TMap<lua_State*, FLuaEnv*> AllEnvs;
+        TMap<FString, FString> ModuleFilePaths;
         TMap<FString, lua_CFunction> BuiltinLoaders;
         TArray<FLuaFileLoader> CustomLoaders;
         TArray<FWeakObjectPtr> Candidates; // binding candidates during async loading

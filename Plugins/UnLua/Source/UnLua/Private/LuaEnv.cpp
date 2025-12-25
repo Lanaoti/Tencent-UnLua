@@ -547,6 +547,23 @@ namespace UnLua
         ManualObjectReference.Remove(Object);
     }
 
+    void FLuaEnv::AddModuleFilePath(const FString& InModuleName, const FString& InFilePath)
+    {
+        FString& FilePath = ModuleFilePaths.FindOrAdd(InModuleName);
+        FilePath = InFilePath;
+    }
+
+    bool FLuaEnv::GetModuleFilePath(const FString& InModuleName, FString& FilePath)
+    {
+        if (const FString* FilePathPtr = ModuleFilePaths.Find(InModuleName))
+        {
+            FilePath = *FilePathPtr;
+            return true;
+        }
+
+        return false;
+    }
+
     int FLuaEnv::LoadFromBuiltinLibs(lua_State* L)
     {
         const FLuaEnv* Env = (FLuaEnv*)lua_touserdata(L, lua_upvalueindex(1));
@@ -590,7 +607,10 @@ namespace UnLua
                 continue;
 
             if (Env.LoadString(L, Data, ChunkName))
+            {
+                Env.AddModuleFilePath(FileName, FPaths::ConvertRelativePathToFull(ChunkName));
                 break;
+            }
 
             return luaL_error(L, "file loading from custom loader error");
         }
@@ -600,8 +620,8 @@ namespace UnLua
 
     int FLuaEnv::LoadFromFileSystem(lua_State* L)
     {
-        FString FileName(UTF8_TO_TCHAR(lua_tostring(L, 1)));
-        FileName.ReplaceInline(TEXT("."), TEXT("/"));
+        FString ModuleName(UTF8_TO_TCHAR(lua_tostring(L, 1)));
+        FString FileName = ModuleName.Replace(TEXT("."), TEXT("/"));
 
         auto& Env = *(FLuaEnv*)lua_touserdata(L, lua_upvalueindex(1));
         TArray<uint8> Data;
@@ -610,7 +630,10 @@ namespace UnLua
         auto LoadIt = [&]
         {
             if (Env.LoadString(L, Data, FullPath))
+            {
+                Env.AddModuleFilePath(ModuleName, FullPath);
                 return 1;
+            }
             const auto Msg = FString::Printf(TEXT("file loading from file system error.\nfull path:%s"), *FullPath);
             return luaL_error(L, TCHAR_TO_UTF8(*Msg));
         };
