@@ -251,6 +251,12 @@ int32 UObject_Delete(lua_State* L)
     if (UnLua::LowLevel::IsReleasedPtr(Object))
         return 0;
 
+    const bool bValid = UnLua::IsUObjectValid(Object) && IsValid(Object) && !Object->IsUnreachable();
+    if (!bValid)
+    {
+        return 0;
+    }
+
     UnLua::FLuaEnv::FindEnvChecked(L).GetObjectRegistry()->NotifyUObjectLuaGC(Object);
     return 0;
 }
