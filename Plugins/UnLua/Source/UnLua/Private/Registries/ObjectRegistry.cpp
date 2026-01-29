@@ -96,7 +96,14 @@ namespace UnLua
         }
 
         lua_getfield(L, LUA_REGISTRYINDEX, REGISTRY_KEY);
-        lua_pushlightuserdata(L, Object);
+        if (Object->IsA(UClass::StaticClass()))
+        {
+            PushObjectCore(L, Object);
+        }
+        else
+        {
+            lua_pushlightuserdata(L, Object);
+        }
         const auto Type = lua_rawget(L, -2);
         if (Type == LUA_TNIL)
         {
